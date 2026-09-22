@@ -7,52 +7,21 @@ import {
 } from '../services/admin.services.js';
 
 export const listAdminsController = async (req, res, next) => {
-  try {
-    const result = await listAdminsService(req.query);
-    res.status(200).json(result);
-  } catch (error) {
-    next(error);
-  }
+  await listAdminsService(req, res);
 };
 
 export const changeUserStatusController = async (req, res, next) => {
-  try {
-    const usuario = await changeUserStatusService(
-      req.params.id,
-      req.body.activo
-    );
-    res.status(200).json(usuario);
-  } catch (error) {
-    next(error);
-  }
+  await changeUserStatusService(req, res);
 };
 
 export const listReportsController = async (req, res, next) => {
-  try {
-    const result = await listReportsService(req.query);
-    res.status(200).json(result);
-  } catch (error) {
-    next(error);
-  }
+  await listReportsService(req, res);
 };
 
 export const resolveReportController = async (req, res, next) => {
-  try {
-    const reporte = await resolveReportService(
-      req.params.id,
-      req.body.accion
-    );
-    res.status(200).json(reporte);
-  } catch (error) {
-    next(error);
-  }
+  await resolveReportService(req, res);
 };
 
 export const getStatisticsController = async (req, res, next) => {
-  try {
-    const estadisticas = await getStatisticsService();
-    res.status(200).json(estadisticas);
-  } catch (error) {
-    next(error);
-  }
+  await getStatisticsService(req, res);
 };

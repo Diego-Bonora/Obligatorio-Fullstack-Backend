@@ -1,11 +1,8 @@
 import Joi from 'joi';
- 
-const usernameField = Joi.string().trim().min(3).max(30);
-const emailField = Joi.string().trim().lowercase().email();
- 
+
 export const updateUserBodySchema = Joi.object({
-  username: usernameField,
-  email: emailField,
+  username: Joi.string().trim().min(3).max(30),
+  email: Joi.string().trim().lowercase().email(),
   profilePicture: Joi.string().uri().allow(null),
 }).min(1);
  

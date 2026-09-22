@@ -9,73 +9,33 @@ import {
 } from '../services/user.services.js';
 
 export const getPerfilController = async (req, res, next) => {
-  try {
-    const usuario = await getUserByIdService(req.decoded.id);
-    res.status(200).json(usuario);
-  } catch (error) {
-    next(error);
-  }
+  await getUserByIdService(req, res);
 };
 
 export const updatePerfilController = async (req, res, next) => {
-  try {
-    const usuario = await updateUserByIdService(req.decoded.id, req.body);
-    res.status(200).json(usuario);
-  } catch (error) {
-    next(error);
-  }
+  await updateUserByIdService(req, );
 };
 
 export const deletePerfilController = async (req, res, next) => {
-  try {
-    await deleteUserService(req.usuario.id);
-    res.status(204).send();
-  } catch (error) {
-    next(error);
-  }
+  await deleteUserService(req, res);
 };
 
 export const getUserController = async (req, res, next) => {
-  try {
-    const usuario = await getUserByIdService(req.params.id);
-    res.status(200).json(usuario);
-  } catch (error) {
-    next(error);
-  }
+  await getUserByIdService(req, res);
 };
 
 export const listUsersController = async (req, res, next) => {
-  try {
-    const result = await listUsersService(req.query);
-    res.status(200).json(result);
-  } catch (error) {
-    next(error);
-  }
+  await listUsersService(req, res);
 };
 
 export const changePlanController = async (req, res, next) => {
-  try {
-    const usuario = await changePlanService(req.decoded.id);
-    res.status(200).json(usuario);
-  } catch (error) {
-    next(error);
-  }
+await changePlanService(req, res);
 };
 
 export const followUserController = async (req, res, next) => {
-  try {
-    const usuario = await followUserService(req.decoded.id, req.params.id);
-    res.status(200).json(usuario);
-  } catch (error) {
-    next(error);
-  }
+  await followUserService(req, res);
 };
 
 export const unfollowUserController = async (req, res, next) => {
-  try {
-    const usuario = await unfollowUserService(req.decoded.id, req.params.id);
-    res.status(200).json(usuario);
-  } catch (error) {
-    next(error);
-  }
+  await unfollowUserService(req, res);
 };
