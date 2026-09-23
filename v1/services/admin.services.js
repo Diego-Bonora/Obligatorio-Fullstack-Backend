@@ -1,6 +1,7 @@
 import User from '../models/user.model.js';
 import Recipe from '../models/recipe.model.js';
 import Report from '../models/report.model.js';
+import { deactivateRecipeService } from './recipe.services.js';
 
 const buildError = (message, status) => {
   const error = new Error(message);
@@ -80,9 +81,7 @@ export const resolveReportService = async (id, accion) => {
   if (!reporte) throw notFoundError('Reporte no encontrado');
 
   if (accion === 'baja') {
-    await Recipe.findByIdAndUpdate(reporte.receta, {
-      $set: { activa: false },
-    });
+    await deactivateRecipeService(reporte.receta);
     reporte.estado = 'revisado';
   } else if (accion === 'descartar') {
     reporte.estado = 'descartado';
