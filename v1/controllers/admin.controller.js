@@ -4,24 +4,29 @@ import {
   listReportsService,
   resolveReportService,
   getStatisticsService,
-} from '../services/admin.services.js';
+} from "../services/admin.services.js";
 
 export const listAdminsController = async (req, res, next) => {
-  await listAdminsService(req, res);
+  const resultado = await listAdminsService(req.validatedQuery);
+  res.json(resultado);
 };
 
 export const changeUserStatusController = async (req, res, next) => {
-  await changeUserStatusService(req, res);
+  const usuario = await changeUserStatusService(req.validatedParams.id, req.validatedBody.activo);
+  res.json(usuario);
 };
 
 export const listReportsController = async (req, res, next) => {
-  await listReportsService(req, res);
+  const resultado = await listReportsService(req.validatedQuery);
+  res.json(resultado);
 };
 
 export const resolveReportController = async (req, res, next) => {
-  await resolveReportService(req, res);
+  const reporte = await resolveReportService(req.validatedParams.id, req.validatedBody.accion);
+  res.json(reporte);
 };
 
 export const getStatisticsController = async (req, res, next) => {
-  await getStatisticsService(req, res);
+  const estadisticas = await getStatisticsService();
+  res.json(estadisticas);
 };

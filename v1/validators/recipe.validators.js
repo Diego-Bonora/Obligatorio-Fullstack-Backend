@@ -2,31 +2,31 @@ import Joi from "joi";
 
 const objectId = Joi.string().hex().length(24);
 
-const ingredientSchema = Joi.object({
-  name: Joi.string().trim().min(1).max(100).required(),
-  quantity: Joi.string().trim().min(1).max(50).required(),
+const ingredienteSchema = Joi.object({
+  nombre: Joi.string().trim().min(1).max(100).required(),
+  cantidad: Joi.string().trim().min(1).max(50).required(),
 });
 
-// Joi rejects unknown keys by default, so author, likesCount, active, nutrition,
-// imageUrl and aiEnrichmentPending are refused without being listed here.
+// Joi rejects unknown keys by default, so autor, cantidadLikes, activa, nutricion,
+// imagenUrl and iaEnriquecimientoPendiente are refused without being listed here.
 export const createRecipeSchema = Joi.object({
-  title: Joi.string().trim().min(3).max(100).required().messages({
+  titulo: Joi.string().trim().min(3).max(100).required().messages({
     "string.min": "El título debe tener al menos {#limit} caracteres",
     "any.required": "El título es obligatorio",
   }),
-  description: Joi.string().trim().max(500),
-  ingredients: Joi.array().items(ingredientSchema).min(1).required().messages({
+  descripcion: Joi.string().trim().max(500),
+  ingredientes: Joi.array().items(ingredienteSchema).min(1).required().messages({
     "array.min": "La receta debe tener al menos un ingrediente",
   }),
-  steps: Joi.array()
+  pasos: Joi.array()
     .items(Joi.string().trim().min(1).max(500))
     .min(1)
     .required()
     .messages({ "array.min": "La receta debe tener al menos un paso" }),
-  prepTime: Joi.number().integer().min(1).max(1440).required(), // minutes
-  difficulty: Joi.string().valid("easy", "medium", "hard").required(),
-  servings: Joi.number().integer().min(1).max(100).required(),
-  category: objectId,
+  tiempoPreparacion: Joi.number().integer().min(1).max(1440).required(), // minutes
+  dificultad: Joi.string().valid("facil", "media", "dificil").required(),
+  porciones: Joi.number().integer().min(1).max(100).required(),
+  categoria: objectId,
   tags: Joi.array().items(Joi.string().trim().lowercase().min(1).max(30)).max(10),
 });
 

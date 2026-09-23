@@ -1,41 +1,40 @@
 import mongoose from "mongoose";
 
-const ingredientSchema = new mongoose.Schema(
+const ingredienteSchema = new mongoose.Schema(
   {
-    name: { type: String, required: true, trim: true },
-    quantity: { type: String, required: true, trim: true },
+    nombre: { type: String, required: true, trim: true },
+    cantidad: { type: String, required: true, trim: true },
   },
   { _id: false }
 );
 
-const recipeSchema = new mongoose.Schema(
+const recetaSchema = new mongoose.Schema(
   {
-    title: { type: String, required: true, trim: true },
-    description: { type: String, trim: true },
-    ingredients: { type: [ingredientSchema], required: true },
-    steps: { type: [String], required: true },
-    prepTime: { type: Number, required: true, min: 1 },
-    difficulty: { type: String, enum: ["easy", "medium", "hard"], required: true },
-    servings: { type: Number, required: true, min: 1 },
-    imageUrl: { type: String },
-    author: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true, index: true },
-    // Plain ref for now: the Category model doesn't exist yet.
-    category: { type: mongoose.Schema.Types.ObjectId, ref: "Category" },
+    titulo: { type: String, required: true, trim: true },
+    descripcion: { type: String, trim: true },
+    ingredientes: { type: [ingredienteSchema], required: true },
+    pasos: { type: [String], required: true },
+    tiempoPreparacion: { type: Number, required: true, min: 1 },
+    dificultad: { type: String, enum: ["facil", "media", "dificil"], required: true },
+    porciones: { type: Number, required: true, min: 1 },
+    imagenUrl: { type: String },
+    autor: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true, index: true },
+    categoria: { type: mongoose.Schema.Types.ObjectId, ref: "Category" },
     tags: { type: [String], default: [] },
-    nutrition: {
-      calories: Number,
-      protein: Number,
-      fat: Number,
-      carbs: Number,
-      fetchedAt: Date,
+    nutricion: {
+      calorias: Number,
+      proteinas: Number,
+      grasas: Number,
+      carbohidratos: Number,
+      consultadoEn: Date,
     },
-    likesCount: { type: Number, default: 0 },
-    aiEnrichmentPending: { type: Boolean, default: false },
-    active: { type: Boolean, default: true },
+    cantidadLikes: { type: Number, default: 0 },
+    iaEnriquecimientoPendiente: { type: Boolean, default: false },
+    activa: { type: Boolean, default: true },
   },
   { timestamps: true }
 );
 
-const Recipe = mongoose.model("Recipe", recipeSchema, "recipes");
+const Recipe = mongoose.model("Receta", recetaSchema, "recetas");
 
 export default Recipe;

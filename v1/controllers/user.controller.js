@@ -6,36 +6,44 @@ import {
   followUserService,
   unfollowUserService,
   deleteUserService,
-} from '../services/user.services.js';
+} from "../services/user.services.js";
 
 export const getPerfilController = async (req, res, next) => {
-  await getUserByIdService(req, res);
+  const usuario = await getUserByIdService(req.decoded.id);
+  res.json(usuario);
 };
 
 export const updatePerfilController = async (req, res, next) => {
-  await updateUserByIdService(req, );
+  const usuario = await updateUserByIdService(req.decoded.id, req.validatedBody);
+  res.json(usuario);
 };
 
 export const deletePerfilController = async (req, res, next) => {
-  await deleteUserService(req, res);
+  const usuario = await deleteUserService(req.decoded.id);
+  res.json(usuario);
 };
 
 export const getUserController = async (req, res, next) => {
-  await getUserByIdService(req, res);
+  const usuario = await getUserByIdService(req.validatedParams.id);
+  res.json(usuario);
 };
 
 export const listUsersController = async (req, res, next) => {
-  await listUsersService(req, res);
+  const resultado = await listUsersService(req.validatedQuery);
+  res.json(resultado);
 };
 
 export const changePlanController = async (req, res, next) => {
-await changePlanService(req, res);
+  const usuario = await changePlanService(req.decoded.id);
+  res.json(usuario);
 };
 
 export const followUserController = async (req, res, next) => {
-  await followUserService(req, res);
+  const usuario = await followUserService(req.decoded.id, req.validatedParams.id);
+  res.json(usuario);
 };
 
 export const unfollowUserController = async (req, res, next) => {
-  await unfollowUserService(req, res);
+  const usuario = await unfollowUserService(req.decoded.id, req.validatedParams.id);
+  res.json(usuario);
 };

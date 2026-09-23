@@ -104,8 +104,8 @@ export const getStatisticsService = async () => {
       ]),
 
       Recipe.aggregate([
-        { $match: { active: true } },
-        { $group: { _id: '$category', cantidad: { $sum: 1 } } },
+        { $match: { activa: true } },
+        { $group: { _id: '$categoria', cantidad: { $sum: 1 } } },
         {
           $lookup: {
             from: 'categories',
@@ -126,8 +126,8 @@ export const getStatisticsService = async () => {
       ]),
 
       Recipe.aggregate([
-        { $match: { active: true } },
-        { $group: { _id: '$author', cantidadRecetas: { $sum: 1 } } },
+        { $match: { activa: true } },
+        { $group: { _id: '$autor', cantidadRecetas: { $sum: 1 } } },
         { $sort: { cantidadRecetas: -1 } },
         { $limit: 5 },
         {
