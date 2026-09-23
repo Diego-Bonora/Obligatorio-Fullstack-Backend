@@ -10,7 +10,7 @@ const buildError = (message, status) => {
 const DUPLICATE_KEY = 11000;
 
 export const likeRecipeService = async (recipeId, userId) => {
-  const exists = await Recipe.exists({ _id: recipeId });
+  const exists = await Recipe.exists({ _id: recipeId, activa: true });
   if (!exists) throw buildError("Receta no encontrada", 404);
 
   try {
