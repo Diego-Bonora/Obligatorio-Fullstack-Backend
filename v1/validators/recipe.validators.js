@@ -42,4 +42,11 @@ export const recipeIdParamsSchema = Joi.object({
 export const listRecipesQuerySchema = Joi.object({
   page: Joi.number().integer().min(1).default(1),
   limit: Joi.number().integer().min(1).max(50).default(10),
+  feed: Joi.string().valid("recent", "following", "popular").default("recent"),
+  category: objectId,
+  author: objectId,
+  difficulty: Joi.string().valid("facil", "media", "dificil"),
+  maxTime: Joi.number().integer().min(1).max(1440),
+  ingredient: Joi.string().trim().min(1).max(50),
+  tags: Joi.string().trim().max(200), // comma-separated: ?tags=postre,sin-tacc
 });

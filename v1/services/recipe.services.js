@@ -1,6 +1,9 @@
 import Recipe from "../models/recipe.model.js";
 import User from "../models/user.model.js";
+import Like from "../models/like.model.js";
+import Comment from "../models/comment.model.js";
 import { getSkip, buildPaginatedResponse } from "../utils/pagination.utils.js";
+import { escapeRegex } from "../utils/regex.utils.js";
 
 const PLUS_RECIPE_LIMIT = 4;
 
@@ -35,14 +38,43 @@ export const createRecipeService = async (userId, recipeData) => {
   }
 };
 
-export const listRecipesService = async ({ page, limit }) => {
+const buildFeedFilter = async (userId, query) => {
+  const { feed, category, author, difficulty, maxTime, ingredient, tags } = query;
+  const conditions = [];
+
+  if (category) conditions.push({ categoria: category });
+  if (author) conditions.push({ autor: author });
+  if (difficulty) conditions.push({ dificultad: difficulty });
+  if (maxTime) conditions.push({ tiempoPreparacion: { $lte: maxTime } });
+  if (ingredient) {
+    conditions.push({
+      "ingredientes.nombre": { $regex: escapeRegex(ingredient), $options: "i" },
+    });
+  }
+  if (tags) {
+    const tagList = tags.split(",").map((tag) => tag.trim().toLowerCase()).filter(Boolean);
+    if (tagList.length) conditions.push({ tags: { $all: tagList } });
+  }
+  if (feed === "following") {
+    const user = await User.findById(userId).select("following");
+    conditions.push({ autor: { $in: user?.following ?? [] } });
+  }
+
+  return conditions.length ? { $and: conditions } : {};
+};
+
+export const listRecipesService = async (userId, query) => {
+  const { page, limit, feed } = query;
+  const filter = await buildFeedFilter(userId, query);
+  const sort = feed === "popular" ? { cantidadLikes: -1, createdAt: -1 } : { createdAt: -1 };
+
   const [recipes, total] = await Promise.all([
-    Recipe.find()
-      .sort({ createdAt: -1 })
+    Recipe.find(filter)
+      .sort(sort)
       .skip(getSkip(page, limit))
       .limit(limit)
       .populate("autor", "username"),
-    Recipe.countDocuments(),
+    Recipe.countDocuments(filter),
   ]);
 
   return buildPaginatedResponse(recipes, total, page, limit);
@@ -76,8 +108,12 @@ export const deleteRecipeService = async (id, user) => {
   }
 
   const { deletedCount } = await Recipe.deleteOne({ _id: recipe._id });
+  if (!deletedCount) return;
+
   // A taken-down recipe (activa: false) already gave its slot back, so it must not decrement twice.
-  if (deletedCount && recipe.activa) {
-    await User.updateOne({ _id: recipe.autor }, { $inc: { cantidadRecetas: -1 } });
-  }
+  await Promise.all([
+    recipe.activa && User.updateOne({ _id: recipe.autor }, { $inc: { cantidadRecetas: -1 } }),
+    Like.deleteMany({ receta: recipe._id }),
+    Comment.deleteMany({ receta: recipe._id }),
+  ]);
 };

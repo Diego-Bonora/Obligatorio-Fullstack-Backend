@@ -12,7 +12,7 @@ export const createRecipe = async (req, res) => {
 };
 
 export const listRecipes = async (req, res) => {
-  const result = await listRecipesService(req.validatedQuery);
+  const result = await listRecipesService(req.decoded.id, req.validatedQuery);
   res.json(result);
 };
 

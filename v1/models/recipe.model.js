@@ -18,7 +18,7 @@ const recetaSchema = new mongoose.Schema(
     dificultad: { type: String, enum: ["facil", "media", "dificil"], required: true },
     porciones: { type: Number, required: true, min: 1 },
     imagenUrl: { type: String },
-    autor: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true, index: true },
+    autor: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
     categoria: { type: mongoose.Schema.Types.ObjectId, ref: "Category" },
     tags: { type: [String], default: [] },
     nutricion: {
@@ -34,6 +34,10 @@ const recetaSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
+recetaSchema.index({ autor: 1, createdAt: -1 });
+recetaSchema.index({ categoria: 1 });
+recetaSchema.index({ cantidadLikes: -1, createdAt: -1 });
 
 const Recipe = mongoose.model("Receta", recetaSchema, "recetas");
 
