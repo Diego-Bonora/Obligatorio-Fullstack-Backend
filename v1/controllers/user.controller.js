@@ -6,7 +6,9 @@ import {
   followUserService,
   unfollowUserService,
   deleteUserService,
+  uploadProfilePictureService,
 } from "../services/user.services.js";
+
 
 export const getPerfilController = async (req, res, next) => {
   const usuario = await getUserByIdService(req.decoded.id);
@@ -20,6 +22,11 @@ export const updatePerfilController = async (req, res, next) => {
 
 export const deletePerfilController = async (req, res, next) => {
   const usuario = await deleteUserService(req.decoded.id);
+  res.json(usuario);
+};
+
+export const uploadProfilePictureController = async (req, res) => {
+  const usuario = await uploadProfilePictureService(req.decoded.id,req.file);
   res.json(usuario);
 };
 
