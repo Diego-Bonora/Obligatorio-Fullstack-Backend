@@ -1,4 +1,6 @@
 import User from "../models/user.model.js";
+import cloudinary from "../config/cloudinary.js";
+import { uploadBufferToCloudinary } from "../utils/cloudinary.util.js";
 
 const buildError = (message, status) => {
   const error = new Error(message);
@@ -121,6 +123,40 @@ export const deleteUserService = async (id) => {
     { new: true }
   );
   if (!usuario) throw notFoundError();
+  return usuario;
+};
+
+export const uploadProfilePictureService = async (id, file) => {
+  if (!file) {
+    const error = new Error("Debe enviar una imagen");
+    error.status = 400;
+    throw error;
+  }
+
+  const result = await uploadBufferToCloudinary(
+    cloudinary,
+    file.buffer,
+    {
+      folder: "profile-pictures",
+      public_id: `user-${id}`,
+      overwrite: true,
+      invalidate: true,
+      resource_type: "image",
+    }
+  );
+
+  const usuario = await User.findOneAndUpdate(
+    { _id: id, activo: true },
+    { profilePicture: result.secure_url },
+    { new: true, runValidators: true }
+  );
+
+  if (!usuario) {
+    const error = new Error("Usuario no encontrado");
+    error.status = 404;
+    throw error;
+  }
+
   return usuario;
 };
 

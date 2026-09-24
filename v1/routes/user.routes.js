@@ -9,7 +9,10 @@ import {
   changePlanController,
   followUserController,
   unfollowUserController,
+  uploadProfilePictureController,
 } from "../controllers/user.controller.js";
+
+import { upload } from "../middlewares/multer.middleware.js";
 
 import {authenticateMiddleware} from "../middlewares/authenticate.middleware.js";
 import {validateBodyMiddleware} from "../middlewares/validateBody.middleware.js";
@@ -32,6 +35,13 @@ router.put(
   updatePerfilController
 );
 router.delete('/perfil', authenticateMiddleware, deletePerfilController);
+
+router.patch(
+  "/perfil/foto",
+  authenticateMiddleware,
+  upload.single("profilePicture"),
+  uploadProfilePictureController
+);
 
 router.get('/',
   authenticateMiddleware,
