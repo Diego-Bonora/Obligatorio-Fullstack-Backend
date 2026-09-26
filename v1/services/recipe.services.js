@@ -1,11 +1,15 @@
 import Recipe from "../models/recipe.model.js";
 import User from "../models/user.model.js";
+import Category from "../models/category.model.js";
 import { getSkip, buildPaginatedResponse } from "../utils/pagination.utils.js";
 import { escapeRegex } from "../utils/regex.utils.js";
+import cloudinary from "../config/cloudinary.js";
+import { uploadBufferToCloudinary } from "../utils/cloudinary.util.js";
+import { generateRecipeEnrichment, generateSubstitutions } from "./groq.services.js";
 import { obtenerNutricion } from "./spoonacular.services.js";
 
-
 const PLUS_RECIPE_LIMIT = 4;
+const MAX_TAGS = 10;
 
 const buildError = (message, status) => {
   const error = new Error(message);
@@ -14,6 +18,29 @@ const buildError = (message, status) => {
 };
 
 const notFoundError = () => buildError("Receta no encontrada", 404);
+
+const enrichWithAI = async (recipeData) => {
+  const categories = recipeData.categoria ? [] : await Category.find({ activa: true }, "nombre");
+  const ai = await generateRecipeEnrichment(
+    recipeData.titulo,
+    recipeData.ingredientes,
+    recipeData.pasos,
+    categories.map((category) => category.nombre)
+  );
+  if (!ai) return { ...recipeData, iaEnriquecimientoPendiente: true };
+
+  const enriched = {
+    ...recipeData,
+    tags: [...new Set([...(recipeData.tags ?? []), ...ai.tags])].slice(0, MAX_TAGS),
+  };
+  if (!recipeData.descripcion) enriched.descripcion = ai.descripcion;
+  if (ai.categoriaSugerida) {
+    const suggested = ai.categoriaSugerida.toLowerCase();
+    const match = categories.find((category) => category.nombre.toLowerCase() === suggested);
+    if (match) enriched.categoria = match._id;
+  }
+  return enriched;
+};
 
 export const createRecipeService = async (userId, recipeData) => {
   const reserved = await User.findOneAndUpdate(
@@ -31,10 +58,11 @@ export const createRecipeService = async (userId, recipeData) => {
   }
 
   try {
-    const nutricion = await obtenerNutricion(
-      recipeData.ingredientes.map((i) => `${i.cantidad} ${i.nombre}`)
-    );
-    return await Recipe.create({ ...recipeData, autor: userId, nutricion });
+    const [enriched, nutricion] = await Promise.all([
+      enrichWithAI(recipeData),
+      obtenerNutricion(recipeData.ingredientes.map((i) => `${i.cantidad} ${i.nombre}`)),
+    ]);
+    return await Recipe.create({ ...enriched, autor: userId, nutricion });
   } catch (error) {
     await User.updateOne({ _id: userId }, { $inc: { cantidadRecetas: -1 } });
     throw error;
@@ -55,7 +83,10 @@ const buildFeedFilter = async (userId, query) => {
     });
   }
   if (tags) {
-    const tagList = tags.split(",").map((tag) => tag.trim().toLowerCase()).filter(Boolean);
+    const tagList = tags
+      .split(",")
+      .map((tag) => tag.trim().toLowerCase().replace(/\s+/g, "-"))
+      .filter(Boolean);
     if (tagList.length) conditions.push({ tags: { $all: tagList } });
   }
   if (feed === "following") {
@@ -99,6 +130,47 @@ export const updateRecipeService = async (id, userId, recipeData) => {
   recipe.set(recipeData);
   await recipe.save();
   return recipe;
+};
+
+export const updateRecipeImageService = async (id, userId, fileBuffer) => {
+  if (!fileBuffer) throw buildError("Debe enviar una imagen", 400);
+
+  const recipe = await Recipe.findOne({ _id: id, activa: true });
+  if (!recipe) throw notFoundError();
+  if (String(recipe.autor) !== userId) {
+    throw buildError("Solo el autor puede modificar la receta", 403);
+  }
+
+  const result = await uploadBufferToCloudinary(cloudinary, fileBuffer, {
+    folder: "recipes",
+    public_id: `recipe-${id}`,
+    overwrite: true,
+    invalidate: true,
+    resource_type: "image",
+  });
+
+  recipe.imagenUrl = result.secure_url;
+  await recipe.save();
+  return recipe;
+};
+
+export const getSubstitutionsService = async (id, userId, restriccion) => {
+  const user = await User.findById(userId).select("plan");
+  if (user?.plan !== "premium") {
+    throw buildError("Las sustituciones son exclusivas del plan premium", 403);
+  }
+
+  const recipe = await Recipe.findOne({ _id: id, activa: true }).select("ingredientes");
+  if (!recipe) throw notFoundError();
+
+  const sustituciones = await generateSubstitutions(recipe.ingredientes, restriccion);
+  if (!sustituciones) {
+    throw buildError(
+      "Servicio de sustituciones no disponible en este momento, probá de nuevo en unos minutos",
+      503
+    );
+  }
+  return sustituciones;
 };
 
 export const deleteRecipeService = async (id, user) => {

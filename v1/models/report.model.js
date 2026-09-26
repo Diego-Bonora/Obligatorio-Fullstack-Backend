@@ -33,5 +33,6 @@ const reporteSchema = new Schema(
 );
 
 reporteSchema.index({ estado: 1, createdAt: -1 });
+reporteSchema.index({ receta: 1, usuarioQueReporta: 1 }, { unique: true });
 
 export default mongoose.model('Report', reporteSchema);

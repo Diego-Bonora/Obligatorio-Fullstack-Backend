@@ -15,25 +15,34 @@ export const createRecipeSchema = Joi.object({
     "any.required": "El título es obligatorio",
   }),
   descripcion: Joi.string().trim().max(500),
-  ingredientes: Joi.array().items(ingredienteSchema).min(1).required().messages({
+  ingredientes: Joi.array().items(ingredienteSchema).min(1).max(50).required().messages({
     "array.min": "La receta debe tener al menos un ingrediente",
+    "array.max": "La receta no puede tener más de {#limit} ingredientes",
   }),
-  pasos: Joi.array()
-    .items(Joi.string().trim().min(1).max(500))
-    .min(1)
-    .required()
-    .messages({ "array.min": "La receta debe tener al menos un paso" }),
+  pasos: Joi.array().items(Joi.string().trim().min(1).max(500)).min(1).max(50).required().messages({
+    "array.min": "La receta debe tener al menos un paso",
+    "array.max": "La receta no puede tener más de {#limit} pasos",
+  }),
   tiempoPreparacion: Joi.number().integer().min(1).max(1440).required(), // minutes
   dificultad: Joi.string().valid("facil", "media", "dificil").required(),
   porciones: Joi.number().integer().min(1).max(100).required(),
   categoria: objectId,
-  tags: Joi.array().items(Joi.string().trim().lowercase().min(1).max(30)).max(10),
+  tags: Joi.array()
+    .items(Joi.string().trim().lowercase().replace(/\s+/g, "-").min(1).max(30))
+    .max(10),
 });
 
 export const updateRecipeSchema = createRecipeSchema
   .fork(Object.keys(createRecipeSchema.describe().keys), (field) => field.optional())
   .min(1)
   .messages({ "object.min": "Debe enviar al menos un campo para actualizar" });
+
+export const substitutionsBodySchema = Joi.object({
+  restriccion: Joi.string().valid("sin_gluten", "sin_lactosa", "vegetariano").required().messages({
+    "any.only": "La restricción debe ser sin_gluten, sin_lactosa o vegetariano",
+    "any.required": "La restricción es obligatoria",
+  }),
+});
 
 export const recipeIdParamsSchema = Joi.object({
   id: objectId.required().messages({ "string.length": "El id de la receta no es válido" }),
