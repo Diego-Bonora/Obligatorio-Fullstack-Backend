@@ -4,20 +4,26 @@ import {
   listRecipes,
   getRecipe,
   updateRecipe,
+  updateRecipeImage,
+  getSubstitutions,
   deleteRecipe,
 } from "../controllers/recipe.controller.js";
 import { likeRecipe, unlikeRecipe } from "../controllers/like.controller.js";
 import { listComments, createComment } from "../controllers/comment.controller.js";
+import { reportRecipe } from "../controllers/report.controller.js";
 import { validateBodyMiddleware } from "../middlewares/validateBody.middleware.js";
 import { validateParamsMiddleware } from "../middlewares/validateParams.middleware.js";
 import { validateQueryMiddleware } from "../middlewares/validateQuery.middleware.js";
+import { upload } from "../middlewares/multer.middleware.js";
 import {
   createRecipeSchema,
   updateRecipeSchema,
   recipeIdParamsSchema,
   listRecipesQuerySchema,
+  substitutionsBodySchema,
 } from "../validators/recipe.validators.js";
 import { createCommentSchema, listCommentsQuerySchema } from "../validators/comment.validators.js";
+import { createReportSchema } from "../validators/report.validators.js";
 
 const router = express.Router();
 
@@ -29,6 +35,12 @@ router.patch(
   validateParamsMiddleware(recipeIdParamsSchema),
   validateBodyMiddleware(updateRecipeSchema),
   updateRecipe
+);
+router.patch(
+  "/:id/image",
+  validateParamsMiddleware(recipeIdParamsSchema),
+  upload.single("imagen"),
+  updateRecipeImage
 );
 router.delete("/:id", validateParamsMiddleware(recipeIdParamsSchema), deleteRecipe);
 
@@ -46,6 +58,20 @@ router.post(
   validateParamsMiddleware(recipeIdParamsSchema),
   validateBodyMiddleware(createCommentSchema),
   createComment
+);
+
+router.post(
+  "/:id/substitutions",
+  validateParamsMiddleware(recipeIdParamsSchema),
+  validateBodyMiddleware(substitutionsBodySchema),
+  getSubstitutions
+);
+
+router.post(
+  "/:id/report",
+  validateParamsMiddleware(recipeIdParamsSchema),
+  validateBodyMiddleware(createReportSchema),
+  reportRecipe
 );
 
 export default router;
