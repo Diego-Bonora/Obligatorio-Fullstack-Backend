@@ -6,6 +6,7 @@ import { escapeRegex } from "../utils/regex.utils.js";
 import cloudinary from "../config/cloudinary.js";
 import { uploadBufferToCloudinary } from "../utils/cloudinary.util.js";
 import { generateRecipeEnrichment, generateSubstitutions } from "./groq.services.js";
+import { obtenerNutricion } from "./spoonacular.services.js";
 
 const PLUS_RECIPE_LIMIT = 4;
 const MAX_TAGS = 10;
@@ -57,8 +58,11 @@ export const createRecipeService = async (userId, recipeData) => {
   }
 
   try {
-    const enriched = await enrichWithAI(recipeData);
-    return await Recipe.create({ ...enriched, autor: userId });
+    const [enriched, nutricion] = await Promise.all([
+      enrichWithAI(recipeData),
+      obtenerNutricion(recipeData.ingredientes.map((i) => `${i.cantidad} ${i.nombre}`)),
+    ]);
+    return await Recipe.create({ ...enriched, autor: userId, nutricion });
   } catch (error) {
     await User.updateOne({ _id: userId }, { $inc: { cantidadRecetas: -1 } });
     throw error;
@@ -181,7 +185,6 @@ export const deleteRecipeService = async (id, user) => {
   await deactivateRecipeService(recipe._id);
 };
 
-// Shared with the admin report takedown. Returns null if the recipe was already inactive.
 export const deactivateRecipeService = async (recipeId) => {
   const recipe = await Recipe.findOneAndUpdate({ _id: recipeId, activa: true }, { activa: false });
   if (recipe) {
