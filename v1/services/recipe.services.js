@@ -2,6 +2,8 @@ import Recipe from "../models/recipe.model.js";
 import User from "../models/user.model.js";
 import { getSkip, buildPaginatedResponse } from "../utils/pagination.utils.js";
 import { escapeRegex } from "../utils/regex.utils.js";
+import { obtenerNutricion } from "./spoonacular.services.js";
+
 
 const PLUS_RECIPE_LIMIT = 4;
 
@@ -29,7 +31,10 @@ export const createRecipeService = async (userId, recipeData) => {
   }
 
   try {
-    return await Recipe.create({ ...recipeData, autor: userId });
+    const nutricion = await obtenerNutricion(
+      recipeData.ingredientes.map((i) => `${i.cantidad} ${i.nombre}`)
+    );
+    return await Recipe.create({ ...recipeData, autor: userId, nutricion });
   } catch (error) {
     await User.updateOne({ _id: userId }, { $inc: { cantidadRecetas: -1 } });
     throw error;
@@ -108,7 +113,6 @@ export const deleteRecipeService = async (id, user) => {
   await deactivateRecipeService(recipe._id);
 };
 
-// Shared with the admin report takedown. Returns null if the recipe was already inactive.
 export const deactivateRecipeService = async (recipeId) => {
   const recipe = await Recipe.findOneAndUpdate({ _id: recipeId, activa: true }, { activa: false });
   if (recipe) {
