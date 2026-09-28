@@ -28,7 +28,7 @@ export const registrarUsuarioService = async (username, email, password) => {
 };
 
 export const ingresarUsuarioService = async (username, password) => {
-  const user = await User.findOne({ username });
+  const user = await User.findOne({ username }).select("+passwordHash");
   if (!user || !user.activo) {
     throw httpError(401, "Credenciales incorrectas");
   }

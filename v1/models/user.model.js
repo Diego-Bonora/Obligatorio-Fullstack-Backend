@@ -15,6 +15,7 @@ const userSchema = new mongoose.Schema(
     passwordHash: {
       type: String,
       required: true,
+      select: false,
     },
     profilePicture: { type: String },
     rol: {
