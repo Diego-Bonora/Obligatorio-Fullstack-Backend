@@ -45,7 +45,7 @@ export const updateCategoryService = async (id, data) => {
   const categoria = await Category.findByIdAndUpdate(
     id,
     { $set: data },
-    { new: true, runValidators: true }
+    { returnDocument: 'after', runValidators: true }
   );
   if (!categoria) throw notFoundError();
   return categoria;

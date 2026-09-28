@@ -43,7 +43,7 @@ export const changeUserStatusService = async (id, activo) => {
   const usuario = await User.findByIdAndUpdate(
     id,
     { $set: { activo } },
-    { new: true }
+    { returnDocument: 'after' }
   );
   if (!usuario) throw notFoundError('Usuario no encontrado');
   return usuario;
@@ -79,6 +79,7 @@ export const listReportsService = async ({ page = 1, limit = 10, estado }) => {
 export const resolveReportService = async (id, accion) => {
   const reporte = await Report.findById(id);
   if (!reporte) throw notFoundError('Reporte no encontrado');
+  if (reporte.estado !== 'pendiente') throw buildError('El reporte ya fue resuelto', 409);
 
   if (accion === 'baja') {
     await deactivateRecipeService(reporte.receta);

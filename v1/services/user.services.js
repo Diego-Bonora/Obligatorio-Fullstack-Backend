@@ -30,7 +30,7 @@ export const updateUserByIdService = async (id, data) => {
   const usuario = await User.findOneAndUpdate(
     { _id: id, activo: true },
     { $set: safeData },
-    { new: true, runValidators: true }
+    { returnDocument: 'after', runValidators: true }
   );
 
   if (!usuario) throw notFoundError();
@@ -120,7 +120,7 @@ export const deleteUserService = async (id) => {
   const usuario = await User.findByIdAndUpdate(
     id,
     { $set: { activo: false } },
-    { new: true }
+    { returnDocument: 'after' }
   );
   if (!usuario) throw notFoundError();
   return usuario;
@@ -148,7 +148,7 @@ export const uploadProfilePictureService = async (id, file) => {
   const usuario = await User.findOneAndUpdate(
     { _id: id, activo: true },
     { profilePicture: result.secure_url },
-    { new: true, runValidators: true }
+    { returnDocument: 'after', runValidators: true }
   );
 
   if (!usuario) {
