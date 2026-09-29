@@ -5,30 +5,30 @@ const SPOONACULAR_BASE_URL = "https://api.spoonacular.com";
 const API_KEY = process.env.SPOONACULAR_API_KEY;
 const MYMEMORY_BASE_URL = "https://api.mymemory.translated.net/get";
 
-async function traducirIngrediente(textoEs) {
+async function translateIngredient(spanishText) {
   try {
     const { data } = await axios.get(MYMEMORY_BASE_URL, {
-      params: { q: textoEs, langpair: "es|en" },
+      params: { q: spanishText, langpair: "es|en" },
       timeout: 5000,
     });
-    return data?.responseData?.translatedText || textoEs;
+    return data?.responseData?.translatedText || spanishText;
   } catch (error) {
-    console.warn(`[mymemory] No se pudo traducir "${textoEs}":`, error.message);
-    return textoEs;
+    console.warn(`[mymemory] No se pudo traducir "${spanishText}":`, error.message);
+    return spanishText;
   }
 }
 
-export async function obtenerNutricion(ingredientes) {
-  if (!API_KEY || !Array.isArray(ingredientes) || ingredientes.length === 0) {
+export async function getNutrition(ingredients) {
+  if (!API_KEY || !Array.isArray(ingredients) || ingredients.length === 0) {
     return null;
   }
   try {
-    const ingredientesEn = await Promise.all(ingredientes.map(traducirIngrediente));
+    const englishIngredients = await Promise.all(ingredients.map(translateIngredient));
 
     const { data } = await axios.post(
       `${SPOONACULAR_BASE_URL}/recipes/parseIngredients`,
       new URLSearchParams({
-        ingredientList: ingredientesEn.join("\n"),
+        ingredientList: englishIngredients.join("\n"),
         servings: "1",
         includeNutrition: "true",
       }),
@@ -39,22 +39,22 @@ export async function obtenerNutricion(ingredientes) {
       }
     );
 
-    const totales = { calorias: 0, proteinas: 0, grasas: 0, carbohidratos: 0 };
+    const totals = { calories: 0, protein: 0, fat: 0, carbs: 0 };
 
     for (const item of data) {
-      const nutrientes = item?.nutrition?.nutrients ?? [];
-      totales.calorias += buscarNutriente(nutrientes, "Calories");
-      totales.proteinas += buscarNutriente(nutrientes, "Protein");
-      totales.grasas += buscarNutriente(nutrientes, "Fat");
-      totales.carbohidratos += buscarNutriente(nutrientes, "Carbohydrates");
+      const nutrients = item?.nutrition?.nutrients ?? [];
+      totals.calories += findNutrient(nutrients, "Calories");
+      totals.protein += findNutrient(nutrients, "Protein");
+      totals.fat += findNutrient(nutrients, "Fat");
+      totals.carbs += findNutrient(nutrients, "Carbohydrates");
     }
 
     return {
-      calorias: Math.round(totales.calorias),
-      proteinas: Math.round(totales.proteinas),
-      grasas: Math.round(totales.grasas),
-      carbohidratos: Math.round(totales.carbohidratos),
-      consultadoEn: new Date(),
+      calories: Math.round(totals.calories),
+      protein: Math.round(totals.protein),
+      fat: Math.round(totals.fat),
+      carbs: Math.round(totals.carbs),
+      fetchedAt: new Date(),
     };
   } catch (error) {
     if (error?.response?.status === 402) {
@@ -66,6 +66,6 @@ export async function obtenerNutricion(ingredientes) {
   }
 }
 
-function buscarNutriente(nutrientes, nombre) {
-  return nutrientes.find((n) => n.name === nombre)?.amount ?? 0;
+function findNutrient(nutrients, name) {
+  return nutrients.find((n) => n.name === name)?.amount ?? 0;
 }

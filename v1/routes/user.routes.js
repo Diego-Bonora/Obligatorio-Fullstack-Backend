@@ -1,9 +1,9 @@
 import { Router } from "express";
 
 import {
-  getPerfilController,
-  updatePerfilController,
-  deletePerfilController,
+  getMeController,
+  updateMeController,
+  deleteMeController,
   getUserController,
   listUsersController,
   changePlanController,
@@ -14,10 +14,9 @@ import {
 
 import { upload } from "../middlewares/multer.middleware.js";
 
-import {authenticateMiddleware} from "../middlewares/authenticate.middleware.js";
-import {validateBodyMiddleware} from "../middlewares/validateBody.middleware.js";
-import {validateParamsMiddleware} from "../middlewares/validateParams.middleware.js";
-import {validateQueryMiddleware} from "../middlewares/validateQuery.middleware.js";
+import { validateBodyMiddleware } from "../middlewares/validateBody.middleware.js";
+import { validateParamsMiddleware } from "../middlewares/validateParams.middleware.js";
+import { validateQueryMiddleware } from "../middlewares/validateQuery.middleware.js";
 
 import {
   updateUserBodySchema,
@@ -27,44 +26,17 @@ import {
 
 const router = Router();
 
-router.get('/perfil', authenticateMiddleware, getPerfilController);
-router.put(
-  '/perfil',
-  authenticateMiddleware,
-  validateBodyMiddleware(updateUserBodySchema),
-  updatePerfilController
-);
-router.delete('/perfil', authenticateMiddleware, deletePerfilController);
+router.get('/me', getMeController);
+router.put('/me', validateBodyMiddleware(updateUserBodySchema), updateMeController);
+router.delete('/me', deleteMeController);
 
-router.patch(
-  "/perfil/foto",
-  authenticateMiddleware,
-  upload.single("profilePicture"),
-  uploadProfilePictureController
-);
+router.patch("/me/picture", upload.single("profilePicture"), uploadProfilePictureController);
+router.patch('/me/plan', changePlanController);
 
-router.get('/',
-  authenticateMiddleware,
-  validateQueryMiddleware(listUsersQuerySchema),
-  listUsersController
-);
-router.get('/:id',
-  authenticateMiddleware,
-  validateParamsMiddleware(userIdParamsSchema),
-  getUserController
-);
+router.get('/', validateQueryMiddleware(listUsersQuerySchema), listUsersController);
+router.get('/:id', validateParamsMiddleware(userIdParamsSchema), getUserController);
 
-router.patch('/perfil/plan', changePlanController);
-
-router.post('/:id/seguir',
-  authenticateMiddleware,
-  validateParamsMiddleware(userIdParamsSchema),
-  followUserController
-);
-router.delete('/:id/seguir',
-  authenticateMiddleware,
-  validateParamsMiddleware(userIdParamsSchema),
-  unfollowUserController
-);
+router.post('/:id/follow', validateParamsMiddleware(userIdParamsSchema), followUserController);
+router.delete('/:id/follow', validateParamsMiddleware(userIdParamsSchema), unfollowUserController);
 
 export default router;

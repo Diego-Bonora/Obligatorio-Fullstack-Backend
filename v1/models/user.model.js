@@ -18,21 +18,21 @@ const userSchema = new mongoose.Schema(
       select: false,
     },
     profilePicture: { type: String },
-    rol: {
+    role: {
       type: String,
-      enum: ["usuario", "admin"],
-      default: "usuario",
+      enum: ["user", "admin"],
+      default: "user",
     },
     plan: {
       type: String,
       enum: ["plus", "premium"],
       default: "plus",
     },
-    cantidadRecetas: {
+    recipesCount: {
       type: Number,
       default: 0,
     },
-    activo: {
+    active: {
       type: Boolean,
       default: true,
     },

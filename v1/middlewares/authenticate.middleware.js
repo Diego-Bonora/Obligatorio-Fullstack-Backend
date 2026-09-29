@@ -2,7 +2,7 @@ import jwt from "jsonwebtoken";
 import User from "../models/user.model.js";
 
 export const authenticateMiddleware = async (req, res, next) => {
-  // En el header de las requests se espera el token en formato "Bearer <token>"
+  // Expected header: "Authorization: Bearer <token>"
   const authHeader = req.headers.authorization;
   if (!authHeader) {
     return res.status(401).json({ message: "No se proporcionó el token" });
@@ -21,8 +21,8 @@ export const authenticateMiddleware = async (req, res, next) => {
   }
 
   // The JWT stays valid for 1h, so a deactivated or deleted user is only caught by checking the DB.
-  const user = await User.findById(decoded.id).select("activo");
-  if (!user || !user.activo) {
+  const user = await User.findById(decoded.id).select("active");
+  if (!user || !user.active) {
     return res.status(401).json({ message: "Usuario inactivo o inexistente" });
   }
 

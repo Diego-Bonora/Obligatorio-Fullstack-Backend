@@ -1,5 +1,6 @@
 import Category from "../models/category.model.js";
 import Recipe from "../models/recipe.model.js";
+import { escapeRegex } from "../utils/regex.utils.js";
 
 const buildError = (message, status) => {
   const error = new Error(message);
@@ -7,62 +8,58 @@ const buildError = (message, status) => {
   return error;
 };
 
-const notFoundError = () => buildError('Categoría no encontrada', 404);
+const notFoundError = () => buildError("Categoría no encontrada", 404);
 
-export const getCategoryService = async () =>
-  Category.find().sort({ nombre: 1 });
+const nameRegex = (name) => new RegExp(`^${escapeRegex(name)}$`, "i");
 
-export const getUseCategoryService = async (id) => {
-  const categoria = await Category.findById(id);
-  if (!categoria) throw notFoundError();
+export const getCategoryService = async () => Category.find().sort({ name: 1 });
 
-  const cantidadRecetas = await Recipe.countDocuments({ categoria: id });
-  return { categoria, cantidadRecetas };
+export const getCategoryUsageService = async (id) => {
+  const category = await Category.findById(id);
+  if (!category) throw notFoundError();
+
+  const recipesCount = await Recipe.countDocuments({ category: id, active: true });
+  return { category, recipesCount };
 };
 
-export const createCategoryService = async ({ nombre, descripcion }) => {
-  const yaExiste = await Category.findOne({
-    nombre: new RegExp(`^${nombre}$`, 'i'),
-  });
-  if (yaExiste) {
-    throw buildError('Ya existe una categoría con ese nombre', 409);
+export const createCategoryService = async ({ name, description }) => {
+  const alreadyExists = await Category.findOne({ name: nameRegex(name) });
+  if (alreadyExists) {
+    throw buildError("Ya existe una categoría con ese nombre", 409);
   }
 
-  return Category.create({ nombre, descripcion });
+  return Category.create({ name, description });
 };
 
 export const updateCategoryService = async (id, data) => {
-  if (data.nombre) {
-    const yaExiste = await Category.findOne({
+  if (data.name) {
+    const alreadyExists = await Category.findOne({
       _id: { $ne: id },
-      nombre: new RegExp(`^${data.nombre}$`, 'i'),
+      name: nameRegex(data.name),
     });
-    if (yaExiste) {
-      throw buildError('Ya existe una categoría con ese nombre', 409);
+    if (alreadyExists) {
+      throw buildError("Ya existe una categoría con ese nombre", 409);
     }
   }
 
-  const categoria = await Category.findByIdAndUpdate(
+  const category = await Category.findByIdAndUpdate(
     id,
     { $set: data },
-    { returnDocument: 'after', runValidators: true }
+    { returnDocument: "after", runValidators: true }
   );
-  if (!categoria) throw notFoundError();
-  return categoria;
+  if (!category) throw notFoundError();
+  return category;
 };
 
 export const deleteCategoryService = async (id) => {
-  const categoria = await Category.findById(id);
-  if (!categoria) throw notFoundError();
+  const category = await Category.findById(id);
+  if (!category) throw notFoundError();
 
-  const tieneRecetas = await Recipe.exists({ categoria: id });
-  if (tieneRecetas) {
-    throw buildError(
-      'No se puede eliminar: hay recetas asociadas a esta categoría',
-      409
-    );
+  const hasRecipes = await Recipe.exists({ category: id });
+  if (hasRecipes) {
+    throw buildError("No se puede eliminar: hay recetas asociadas a esta categoría", 409);
   }
 
   await Category.findByIdAndDelete(id);
-  return categoria;
+  return category;
 };

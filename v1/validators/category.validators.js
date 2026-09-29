@@ -5,12 +5,12 @@ export const idParamsSchema = Joi.object({
 });
 
 export const createCategoryBodySchema = Joi.object({
-  nombre: Joi.string().trim().min(2).max(50).required(),
-  descripcion: Joi.string().trim().allow(''),
+  name: Joi.string().trim().min(2).max(50).required(),
+  description: Joi.string().trim().allow(''),
 });
 
 export const updateCategoryBodySchema = Joi.object({
-  nombre: Joi.string().trim().min(2).max(50),
-  descripcion: Joi.string().trim().allow(''),
-  activa: Joi.boolean(),
+  name: Joi.string().trim().min(2).max(50),
+  description: Joi.string().trim().allow(''),
+  active: Joi.boolean(),
 }).min(1);

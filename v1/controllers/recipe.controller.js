@@ -42,13 +42,13 @@ export const updateRecipeImage = async (req, res) => {
 };
 
 export const getSubstitutions = async (req, res) => {
-  const { restriccion } = req.validatedBody;
-  const sustituciones = await getSubstitutionsService(
+  const { restriction } = req.validatedBody;
+  const substitutions = await getSubstitutionsService(
     req.validatedParams.id,
     req.decoded.id,
-    restriccion
+    restriction
   );
-  res.json({ restriccion, sustituciones });
+  res.json({ restriction, substitutions });
 };
 
 export const deleteRecipe = async (req, res) => {

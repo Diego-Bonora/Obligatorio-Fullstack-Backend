@@ -9,27 +9,27 @@ const buildError = (message, status) => {
 };
 
 const ensureRecipeExists = async (recipeId) => {
-  const exists = await Recipe.exists({ _id: recipeId, activa: true });
+  const exists = await Recipe.exists({ _id: recipeId, active: true });
   if (!exists) throw buildError("Receta no encontrada", 404);
 };
 
 export const listCommentsService = async (recipeId, { page, limit }) => {
   await ensureRecipeExists(recipeId);
 
-  const filter = { receta: recipeId };
+  const filter = { recipe: recipeId };
   const [comments, total] = await Promise.all([
     Comment.find(filter)
       .sort({ createdAt: -1 })
       .skip(getSkip(page, limit))
       .limit(limit)
-      .populate("autor", "username"),
+      .populate("author", "username"),
     Comment.countDocuments(filter),
   ]);
 
   return buildPaginatedResponse(comments, total, page, limit);
 };
 
-export const createCommentService = async (recipeId, userId, { texto }) => {
+export const createCommentService = async (recipeId, userId, { text }) => {
   await ensureRecipeExists(recipeId);
-  return Comment.create({ receta: recipeId, autor: userId, texto });
+  return Comment.create({ recipe: recipeId, author: userId, text });
 };

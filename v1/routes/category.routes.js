@@ -2,13 +2,12 @@ import { Router } from 'express';
 
 import {
   getCategoryController,
-  getUseCategoryController,
+  getCategoryUsageController,
   createCategoryController,
   updateCategoryController,
   deleteCategoryController,
 } from '../controllers/category.controller.js';
 
-import {authenticateMiddleware} from '../middlewares/authenticate.middleware.js';
 import {authorizeRoleMiddleware} from '../middlewares/authorizeRole.middleware.js';
 import {validateBodyMiddleware} from '../middlewares/validateBody.middleware.js';
 import {validateParamsMiddleware} from '../middlewares/validateParams.middleware.js';
@@ -20,13 +19,12 @@ import {
 } from '../validators/category.validators.js';
 
 const router = Router();
-router.use(authenticateMiddleware);
 
 router.get('/', getCategoryController);
 router.get(
-  '/:id/uso',
+  '/:id/usage',
   validateParamsMiddleware(idParamsSchema),
-  getUseCategoryController
+  getCategoryUsageController
 );
 
 router.post(

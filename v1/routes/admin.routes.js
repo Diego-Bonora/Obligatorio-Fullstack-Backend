@@ -1,7 +1,7 @@
 import { Router } from 'express';
 
 import {
-  listAdminsController,
+  listAdminUsersController,
   changeUserStatusController,
   listReportsController,
   resolveReportController,
@@ -15,7 +15,7 @@ import { validateQueryMiddleware } from "../middlewares/validateQuery.middleware
 
 import {
   idParamsSchema,
-  listAdminsQuerySchema,
+  listAdminUsersQuerySchema,
   changeUserStatusBodySchema,
   listReportsQuerySchema,
   resolveReportBodySchema,
@@ -25,26 +25,26 @@ const router = Router();
 
 router.use(authorizeRoleMiddleware('admin'));
 
-router.get('/usuarios',
-  validateQueryMiddleware(listAdminsQuerySchema),
-  listAdminsController
+router.get('/users',
+  validateQueryMiddleware(listAdminUsersQuerySchema),
+  listAdminUsersController
 );
-router.patch('/usuarios/:id/estado',
+router.patch('/users/:id/status',
   validateParamsMiddleware(idParamsSchema),
   validateBodyMiddleware(changeUserStatusBodySchema),
   changeUserStatusController
 );
 
-router.get('/reportes',
+router.get('/reports',
   validateQueryMiddleware(listReportsQuerySchema),
   listReportsController
 );
-router.patch('/reportes/:id/resolver',
+router.patch('/reports/:id/resolve',
   validateParamsMiddleware(idParamsSchema),
   validateBodyMiddleware(resolveReportBodySchema),
   resolveReportController
 );
 
-router.get('/estadisticas', getStatisticsController);
+router.get('/stats', getStatisticsController);
 
 export default router;

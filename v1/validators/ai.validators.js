@@ -6,9 +6,9 @@ const tag = Joi.string()
 
 export const buildEnrichmentSchema = (categoryNames) =>
   Joi.object({
-    descripcion: Joi.string().trim().min(1).max(200).required(),
+    description: Joi.string().trim().min(1).max(200).required(),
     tags: Joi.array().items(tag).min(3).max(6).required(),
-    categoriaSugerida: categoryNames.length
+    suggestedCategory: categoryNames.length
       ? Joi.string()
           .trim()
           .valid(...categoryNames)
@@ -18,12 +18,12 @@ export const buildEnrichmentSchema = (categoryNames) =>
   }).options({ stripUnknown: true });
 
 export const substitutionsSchema = Joi.object({
-  sustituciones: Joi.array()
+  substitutions: Joi.array()
     .items(
       Joi.object({
         original: Joi.string().trim().min(1).max(100).required(),
-        sustituto: Joi.string().trim().min(1).max(100).required(),
-        motivo: Joi.string().trim().min(1).max(200).required(),
+        substitute: Joi.string().trim().min(1).max(100).required(),
+        reason: Joi.string().trim().min(1).max(200).required(),
       })
     )
     .max(30)

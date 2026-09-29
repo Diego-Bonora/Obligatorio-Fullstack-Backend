@@ -10,11 +10,11 @@ const buildError = (message, status) => {
 const DUPLICATE_KEY = 11000;
 
 export const likeRecipeService = async (recipeId, userId) => {
-  const exists = await Recipe.exists({ _id: recipeId, activa: true });
+  const exists = await Recipe.exists({ _id: recipeId, active: true });
   if (!exists) throw buildError("Receta no encontrada", 404);
 
   try {
-    await Like.create({ receta: recipeId, usuario: userId });
+    await Like.create({ recipe: recipeId, user: userId });
   } catch (error) {
     if (error.code === DUPLICATE_KEY) {
       throw buildError("Ya le diste like a esta receta", 409);
@@ -22,12 +22,12 @@ export const likeRecipeService = async (recipeId, userId) => {
     throw error;
   }
 
-  await Recipe.updateOne({ _id: recipeId }, { $inc: { cantidadLikes: 1 } });
+  await Recipe.updateOne({ _id: recipeId }, { $inc: { likesCount: 1 } });
 };
 
 export const unlikeRecipeService = async (recipeId, userId) => {
-  const like = await Like.findOneAndDelete({ receta: recipeId, usuario: userId });
+  const like = await Like.findOneAndDelete({ recipe: recipeId, user: userId });
   if (!like) throw buildError("No le diste like a esta receta", 404);
 
-  await Recipe.updateOne({ _id: recipeId }, { $inc: { cantidadLikes: -1 } });
+  await Recipe.updateOne({ _id: recipeId }, { $inc: { likesCount: -1 } });
 };

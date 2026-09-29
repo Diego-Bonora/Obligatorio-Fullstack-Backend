@@ -1,6 +1,6 @@
 import Joi from "joi";
 
-// rol y plan nunca se aceptan desde el body del registro: los fuerza el service.
+// role and plan are never accepted in the register body: the service sets them.
 export const registerSchema = Joi.object({
   username: Joi.string().min(3).max(30).required(),
   email: Joi.string().email().required(),

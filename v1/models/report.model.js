@@ -2,37 +2,37 @@ import mongoose from 'mongoose';
 
 const { Schema } = mongoose;
 
-const reporteSchema = new Schema(
+const reportSchema = new Schema(
   {
-    receta: {
+    recipe: {
       type: Schema.Types.ObjectId,
-      ref: 'Receta',
+      ref: 'Recipe',
       required: true,
     },
-    usuarioQueReporta: {
+    reportedBy: {
       type: Schema.Types.ObjectId,
       ref: 'User',
       required: true,
     },
-    motivo: {
+    reason: {
       type: String,
-      enum: ['spam', 'contenido_inapropiado', 'otro'],
+      enum: ['spam', 'inappropriate_content', 'other'],
       required: true,
     },
-    detalle: {
+    details: {
       type: String,
       maxlength: 300,
     },
-    estado: {
+    status: {
       type: String,
-      enum: ['pendiente', 'revisado', 'descartado'],
-      default: 'pendiente',
+      enum: ['pending', 'reviewed', 'dismissed'],
+      default: 'pending',
     },
   },
   { timestamps: true }
 );
 
-reporteSchema.index({ estado: 1, createdAt: -1 });
-reporteSchema.index({ receta: 1, usuarioQueReporta: 1 }, { unique: true });
+reportSchema.index({ status: 1, createdAt: -1 });
+reportSchema.index({ recipe: 1, reportedBy: 1 }, { unique: true });
 
-export default mongoose.model('Report', reporteSchema);
+export default mongoose.model('Report', reportSchema, 'reports');

@@ -39,7 +39,7 @@ router.patch(
 router.patch(
   "/:id/image",
   validateParamsMiddleware(recipeIdParamsSchema),
-  upload.single("imagen"),
+  upload.single("image"),
   updateRecipeImage
 );
 router.delete("/:id", validateParamsMiddleware(recipeIdParamsSchema), deleteRecipe);

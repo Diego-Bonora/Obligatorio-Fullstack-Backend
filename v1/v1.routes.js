@@ -8,17 +8,16 @@ import { authenticateMiddleware } from "./middlewares/authenticate.middleware.js
 
 const router = express.Router({ mergeParams: true });
 
-// Rutas públicas
+// Public routes
 router.use("/auth", authRouter);
 
-// A partir de acá, rutas protegidas
+// Everything below requires a valid token
 router.use(authenticateMiddleware);
 
 router.use("/recipes", recipeRouter);
 router.use("/users", userRouter);
 
-//Admin 
 router.use("/admin", adminRouter);
-router.use("/category", categoryRouter);
+router.use("/categories", categoryRouter);
 
 export default router;

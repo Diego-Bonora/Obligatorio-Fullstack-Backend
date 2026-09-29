@@ -4,16 +4,16 @@ const { Schema } = mongoose;
 
 const categorySchema = new Schema(
   {
-    nombre: {
+    name: {
       type: String,
       required: [true, 'El nombre es obligatorio'],
       unique: true,
       trim: true,
     },
-    descripcion: {
+    description: {
       type: String,
     },
-    activa: {
+    active: {
       type: Boolean,
       default: true,
     },

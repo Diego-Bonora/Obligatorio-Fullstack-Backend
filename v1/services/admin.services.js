@@ -1,7 +1,8 @@
-import User from '../models/user.model.js';
-import Recipe from '../models/recipe.model.js';
-import Report from '../models/report.model.js';
-import { deactivateRecipeService } from './recipe.services.js';
+import User from "../models/user.model.js";
+import Recipe from "../models/recipe.model.js";
+import Report from "../models/report.model.js";
+import { deactivateRecipeService } from "./recipe.services.js";
+import { buildPaginatedResponse, getSkip } from "../utils/pagination.utils.js";
 
 const buildError = (message, status) => {
   const error = new Error(message);
@@ -9,145 +10,115 @@ const buildError = (message, status) => {
   return error;
 };
 
-const notFoundError = (mensaje) => buildError(mensaje, 404);
+const notFoundError = (message) => buildError(message, 404);
 
-
-export const listAdminsService = async ({
-  page = 1,
-  limit = 10,
-  plan,
-  rol,
-}) => {
+export const listAdminUsersService = async ({ page = 1, limit = 10, plan, role }) => {
   const filter = {};
   if (plan) filter.plan = plan;
-  if (rol) filter.rol = rol;
+  if (role) filter.role = role;
 
-  const skip = (page - 1) * limit;
-  const [usuarios, total] = await Promise.all([
-    User.find(filter).skip(skip).limit(limit),
+  const [users, total] = await Promise.all([
+    User.find(filter).skip(getSkip(page, limit)).limit(limit),
     User.countDocuments(filter),
   ]);
 
-  return {
-    data: usuarios,
-    meta: {
-      page,
-      limit,
-      total,
-      totalPages: Math.ceil(total / limit),
-    },
-  };
+  return buildPaginatedResponse(users, total, page, limit);
 };
 
-export const changeUserStatusService = async (id, activo) => {
-  const usuario = await User.findByIdAndUpdate(
-    id,
-    { $set: { activo } },
-    { returnDocument: 'after' }
-  );
-  if (!usuario) throw notFoundError('Usuario no encontrado');
-  return usuario;
+export const changeUserStatusService = async (id, active) => {
+  const user = await User.findByIdAndUpdate(id, { $set: { active } }, { returnDocument: "after" });
+  if (!user) throw notFoundError("Usuario no encontrado");
+  return user;
 };
 
-
-export const listReportsService = async ({ page = 1, limit = 10, estado }) => {
+export const listReportsService = async ({ page = 1, limit = 10, status }) => {
   const filter = {};
-  if (estado) filter.estado = estado;
+  if (status) filter.status = status;
 
-  const skip = (page - 1) * limit;
-  const [reportes, total] = await Promise.all([
+  const [reports, total] = await Promise.all([
     Report.find(filter)
-      .populate('receta', 'titulo')
-      .populate('usuarioQueReporta', 'username')
+      .populate("recipe", "title")
+      .populate("reportedBy", "username")
       .sort({ createdAt: -1 })
-      .skip(skip)
+      .skip(getSkip(page, limit))
       .limit(limit),
     Report.countDocuments(filter),
   ]);
 
-  return {
-    data: reportes,
-    meta: {
-      page,
-      limit,
-      total,
-      totalPages: Math.ceil(total / limit),
-    },
-  };
+  return buildPaginatedResponse(reports, total, page, limit);
 };
 
-export const resolveReportService = async (id, accion) => {
-  const reporte = await Report.findById(id);
-  if (!reporte) throw notFoundError('Reporte no encontrado');
-  if (reporte.estado !== 'pendiente') throw buildError('El reporte ya fue resuelto', 409);
+export const resolveReportService = async (id, action) => {
+  const report = await Report.findById(id);
+  if (!report) throw notFoundError("Reporte no encontrado");
+  if (report.status !== "pending") throw buildError("El reporte ya fue resuelto", 409);
 
-  if (accion === 'baja') {
-    await deactivateRecipeService(reporte.receta);
-    reporte.estado = 'revisado';
-  } else if (accion === 'descartar') {
-    reporte.estado = 'descartado';
+  if (action === "takedown") {
+    await deactivateRecipeService(report.recipe);
+    report.status = "reviewed";
+  } else if (action === "dismiss") {
+    report.status = "dismissed";
   } else {
-    throw buildError('Acción inválida', 400);
+    throw buildError("Acción inválida", 400);
   }
 
-  await reporte.save();
-  return reporte;
+  await report.save();
+  return report;
 };
 
 export const getStatisticsService = async () => {
-  const [usuariosPorPlan, recetasPorCategoria, topAutores] =
-    await Promise.all([
-      User.aggregate([
-        { $match: { activo: true } },
-        { $group: { _id: '$plan', cantidad: { $sum: 1 } } },
-        { $project: { _id: 0, plan: '$_id', cantidad: 1 } },
-      ]),
+  const [usersByPlan, recipesByCategory, topAuthors] = await Promise.all([
+    User.aggregate([
+      { $match: { active: true } },
+      { $group: { _id: "$plan", count: { $sum: 1 } } },
+      { $project: { _id: 0, plan: "$_id", count: 1 } },
+    ]),
 
-      Recipe.aggregate([
-        { $match: { activa: true } },
-        { $group: { _id: '$categoria', cantidad: { $sum: 1 } } },
-        {
-          $lookup: {
-            from: 'categories',
-            localField: '_id',
-            foreignField: '_id',
-            as: 'categoria',
-          },
+    Recipe.aggregate([
+      { $match: { active: true } },
+      { $group: { _id: "$category", count: { $sum: 1 } } },
+      {
+        $lookup: {
+          from: "categories",
+          localField: "_id",
+          foreignField: "_id",
+          as: "category",
         },
-        { $unwind: '$categoria' },
-        {
-          $project: {
-            _id: 0,
-            categoria: '$categoria.nombre',
-            cantidad: 1,
-          },
+      },
+      { $unwind: "$category" },
+      {
+        $project: {
+          _id: 0,
+          category: "$category.name",
+          count: 1,
         },
-        { $sort: { cantidad: -1 } },
-      ]),
+      },
+      { $sort: { count: -1 } },
+    ]),
 
-      Recipe.aggregate([
-        { $match: { activa: true } },
-        { $group: { _id: '$autor', cantidadRecetas: { $sum: 1 } } },
-        { $sort: { cantidadRecetas: -1 } },
-        { $limit: 5 },
-        {
-          $lookup: {
-            from: 'users',
-            localField: '_id',
-            foreignField: '_id',
-            as: 'autor',
-          },
+    Recipe.aggregate([
+      { $match: { active: true } },
+      { $group: { _id: "$author", recipesCount: { $sum: 1 } } },
+      { $sort: { recipesCount: -1 } },
+      { $limit: 5 },
+      {
+        $lookup: {
+          from: "users",
+          localField: "_id",
+          foreignField: "_id",
+          as: "author",
         },
-        { $unwind: '$autor' },
-        {
-          $project: {
-            _id: 0,
-            autor: '$autor.username',
-            cantidadRecetas: 1,
-          },
+      },
+      { $unwind: "$author" },
+      {
+        $project: {
+          _id: 0,
+          author: "$author.username",
+          recipesCount: 1,
         },
-      ]),
-    ]);
+      },
+    ]),
+  ]);
 
-  return { usuariosPorPlan, recetasPorCategoria, topAutores };
+  return { usersByPlan, recipesByCategory, topAuthors };
 };

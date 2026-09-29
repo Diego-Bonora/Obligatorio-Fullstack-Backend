@@ -1,32 +1,32 @@
 import {
   getCategoryService,
-  getUseCategoryService,
+  getCategoryUsageService,
   createCategoryService,
   updateCategoryService,
   deleteCategoryService,
 } from "../services/category.services.js";
 
 export const getCategoryController = async (req, res, next) => {
-  const categorias = await getCategoryService();
-  res.json(categorias);
+  const categories = await getCategoryService();
+  res.json(categories);
 };
 
-export const getUseCategoryController = async (req, res, next) => {
-  const uso = await getUseCategoryService(req.validatedParams.id);
-  res.json(uso);
+export const getCategoryUsageController = async (req, res, next) => {
+  const usage = await getCategoryUsageService(req.validatedParams.id);
+  res.json(usage);
 };
 
 export const createCategoryController = async (req, res, next) => {
-  const categoria = await createCategoryService(req.validatedBody);
-  res.status(201).json(categoria);
+  const category = await createCategoryService(req.validatedBody);
+  res.status(201).json(category);
 };
 
 export const updateCategoryController = async (req, res, next) => {
-  const categoria = await updateCategoryService(req.validatedParams.id, req.validatedBody);
-  res.json(categoria);
+  const category = await updateCategoryService(req.validatedParams.id, req.validatedBody);
+  res.json(category);
 };
 
 export const deleteCategoryController = async (req, res, next) => {
-  const categoria = await deleteCategoryService(req.validatedParams.id);
-  res.json(categoria);
+  const category = await deleteCategoryService(req.validatedParams.id);
+  res.json(category);
 };
