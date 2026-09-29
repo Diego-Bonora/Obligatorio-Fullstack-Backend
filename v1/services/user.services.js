@@ -12,8 +12,17 @@ const buildError = (message, status) => {
 
 const notFoundError = () => buildError("Usuario no encontrado", 404);
 
+// What any logged-in user may see about someone else (no email, role or plan).
+const PUBLIC_FIELDS = "username profilePicture createdAt";
+
 export const getUserByIdService = async (id) => {
   const user = await User.findOne({ _id: id, active: true });
+  if (!user) throw notFoundError();
+  return user;
+};
+
+export const getPublicUserService = async (id) => {
+  const user = await User.findOne({ _id: id, active: true }).select(PUBLIC_FIELDS);
   if (!user) throw notFoundError();
   return user;
 };
@@ -38,7 +47,7 @@ export const listUsersService = async ({ page = 1, limit = 10, search }) => {
   }
 
   const [users, total] = await Promise.all([
-    User.find(filter).skip(getSkip(page, limit)).limit(limit),
+    User.find(filter).select(PUBLIC_FIELDS).skip(getSkip(page, limit)).limit(limit),
     User.countDocuments(filter),
   ]);
 
@@ -63,33 +72,25 @@ export const followUserService = async (userId, targetId) => {
     throw buildError("No podés seguirte a vos mismo", 400);
   }
 
-  const target = await User.findOne({ _id: targetId, active: true });
+  const target = await User.exists({ _id: targetId, active: true });
   if (!target) throw notFoundError();
 
-  const user = await User.findOne({ _id: userId, active: true });
-  if (!user) throw notFoundError();
-
-  const alreadyFollowing = user.following.some((followedId) => followedId.toString() === targetId);
-
-  if (alreadyFollowing) {
-    user.following = user.following.filter((followedId) => followedId.toString() !== targetId);
-  } else {
-    user.following.push(targetId);
-  }
-
-  await user.save();
+  const user = await User.findOneAndUpdate(
+    { _id: userId, following: { $ne: targetId } },
+    { $addToSet: { following: targetId } },
+    { returnDocument: "after" }
+  );
+  if (!user) throw buildError("Ya seguís a este usuario", 409);
   return user;
 };
 
 export const unfollowUserService = async (userId, targetId) => {
-  const user = await User.findOne({ _id: userId, active: true });
-  if (!user) throw notFoundError();
-
-  const alreadyFollowing = user.following.some((followedId) => followedId.toString() === targetId);
-  if (!alreadyFollowing) throw notFoundError();
-
-  user.following = user.following.filter((followedId) => followedId.toString() !== targetId);
-  await user.save();
+  const user = await User.findOneAndUpdate(
+    { _id: userId, following: targetId },
+    { $pull: { following: targetId } },
+    { returnDocument: "after" }
+  );
+  if (!user) throw buildError("No seguís a este usuario", 404);
   return user;
 };
 

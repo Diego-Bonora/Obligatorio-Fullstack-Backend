@@ -49,20 +49,27 @@ export const listReportsService = async ({ page = 1, limit = 10, status }) => {
 };
 
 export const resolveReportService = async (id, action) => {
-  const report = await Report.findById(id);
-  if (!report) throw notFoundError("Reporte no encontrado");
-  if (report.status !== "pending") throw buildError("El reporte ya fue resuelto", 409);
-
-  if (action === "takedown") {
-    await deactivateRecipeService(report.recipe);
-    report.status = "reviewed";
-  } else if (action === "dismiss") {
-    report.status = "dismissed";
-  } else {
-    throw buildError("Acción inválida", 400);
+  // Claim the report atomically so two admins resolving at once can't both act on it.
+  const report = await Report.findOneAndUpdate(
+    { _id: id, status: "pending" },
+    { status: action === "takedown" ? "reviewed" : "dismissed" },
+    { returnDocument: "after" }
+  );
+  if (!report) {
+    const exists = await Report.exists({ _id: id });
+    if (!exists) throw notFoundError("Reporte no encontrado");
+    throw buildError("El reporte ya fue resuelto", 409);
   }
 
-  await report.save();
+  if (action === "takedown") {
+    try {
+      await deactivateRecipeService(report.recipe);
+    } catch (error) {
+      // Release the report so the takedown can be retried.
+      await Report.updateOne({ _id: id }, { status: "pending" });
+      throw error;
+    }
+  }
   return report;
 };
 
@@ -85,11 +92,11 @@ export const getStatisticsService = async () => {
           as: "category",
         },
       },
-      { $unwind: "$category" },
+      { $unwind: { path: "$category", preserveNullAndEmptyArrays: true } },
       {
         $project: {
           _id: 0,
-          category: "$category.name",
+          category: { $ifNull: ["$category.name", null] },
           count: 1,
         },
       },

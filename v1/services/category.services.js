@@ -55,7 +55,7 @@ export const deleteCategoryService = async (id) => {
   const category = await Category.findById(id);
   if (!category) throw notFoundError();
 
-  const hasRecipes = await Recipe.exists({ category: id });
+  const hasRecipes = await Recipe.exists({ category: id, active: true });
   if (hasRecipes) {
     throw buildError("No se puede eliminar: hay recetas asociadas a esta categoría", 409);
   }

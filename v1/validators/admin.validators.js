@@ -1,7 +1,7 @@
 import Joi from 'joi';
 
 export const idParamsSchema = Joi.object({
-  id: Joi.string().hex().length(24).required(),
+  id: Joi.string().hex().length(24).lowercase().required(),
 });
 
 export const listAdminUsersQuerySchema = Joi.object({

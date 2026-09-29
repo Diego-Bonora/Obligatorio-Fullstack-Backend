@@ -1,6 +1,6 @@
 import Joi from "joi";
 
-const objectId = Joi.string().hex().length(24);
+const objectId = Joi.string().hex().length(24).lowercase();
 
 const ingredientSchema = Joi.object({
   name: Joi.string().trim().min(1).max(100).required(),

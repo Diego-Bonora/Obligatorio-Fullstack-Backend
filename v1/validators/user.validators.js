@@ -3,11 +3,10 @@ import Joi from 'joi';
 export const updateUserBodySchema = Joi.object({
   username: Joi.string().trim().min(3).max(30),
   email: Joi.string().trim().lowercase().email(),
-  profilePicture: Joi.string().uri().allow(null),
 }).min(1);
  
 export const userIdParamsSchema = Joi.object({
-  id: Joi.string().hex().length(24).required(),
+  id: Joi.string().hex().length(24).lowercase().required(),
 });
  
 export const listUsersQuerySchema = Joi.object({

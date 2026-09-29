@@ -1,5 +1,6 @@
 import {
   getUserByIdService,
+  getPublicUserService,
   updateUserByIdService,
   listUsersService,
   changePlanService,
@@ -30,7 +31,7 @@ export const uploadProfilePictureController = async (req, res) => {
 };
 
 export const getUserController = async (req, res, next) => {
-  const user = await getUserByIdService(req.validatedParams.id);
+  const user = await getPublicUserService(req.validatedParams.id);
   res.json(user);
 };
 

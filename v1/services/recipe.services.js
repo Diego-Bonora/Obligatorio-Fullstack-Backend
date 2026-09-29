@@ -19,6 +19,11 @@ const buildError = (message, status) => {
 
 const notFoundError = () => buildError("Receta no encontrada", 404);
 
+const ensureCategoryIsActive = async (categoryId) => {
+  const exists = await Category.exists({ _id: categoryId, active: true });
+  if (!exists) throw buildError("La categoría no existe o no está activa", 400);
+};
+
 const enrichWithAI = async (recipeData) => {
   const categories = recipeData.category ? [] : await Category.find({ active: true }, "name");
   const ai = await generateRecipeEnrichment(
@@ -43,6 +48,8 @@ const enrichWithAI = async (recipeData) => {
 };
 
 export const createRecipeService = async (userId, recipeData) => {
+  if (recipeData.category) await ensureCategoryIsActive(recipeData.category);
+
   const reserved = await User.findOneAndUpdate(
     {
       _id: userId,
@@ -125,6 +132,10 @@ export const updateRecipeService = async (id, userId, recipeData) => {
   if (!recipe) throw notFoundError();
   if (String(recipe.author) !== userId) {
     throw buildError("Solo el autor puede modificar la receta", 403);
+  }
+  // Only a new category is checked: keeping one that an admin deactivated later is allowed.
+  if (recipeData.category && recipeData.category !== String(recipe.category)) {
+    await ensureCategoryIsActive(recipeData.category);
   }
 
   recipe.set(recipeData);
