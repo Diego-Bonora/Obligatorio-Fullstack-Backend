@@ -25,6 +25,12 @@ const ensureCategoryIsActive = async (categoryId) => {
   if (!exists) throw buildError("La categoría no existe o no está activa", 400);
 };
 
+const toNutritionQuery = (ingredients) => ingredients.map((i) => `${i.quantity} ${i.name}`);
+
+const ingredientsChanged = (current, next) =>
+  JSON.stringify(current.map(({ name, quantity }) => ({ name, quantity }))) !==
+  JSON.stringify(next.map(({ name, quantity }) => ({ name, quantity })));
+
 const enrichWithAI = async (recipeData) => {
   const categories = recipeData.category ? [] : await Category.find({ active: true }, "name");
   const ai = await generateRecipeEnrichment(
@@ -68,7 +74,7 @@ export const createRecipeService = async (userId, recipeData) => {
   try {
     const [enriched, nutrition] = await Promise.all([
       enrichWithAI(recipeData),
-      getNutrition(recipeData.ingredients.map((i) => `${i.quantity} ${i.name}`)),
+      getNutrition(toNutritionQuery(recipeData.ingredients)),
     ]);
     return await Recipe.create({ ...enriched, author: userId, nutrition });
   } catch (error) {
@@ -138,6 +144,12 @@ export const updateRecipeService = async (id, userId, recipeData) => {
   // Only a new category is checked: keeping one that an admin deactivated later is allowed.
   if (recipeData.category && recipeData.category !== String(recipe.category)) {
     await ensureCategoryIsActive(recipeData.category);
+  }
+
+  // Nutrition depends on the ingredients only, so Spoonacular is called again only when they change.
+  // getNutrition returns null on failure: better no nutrition than stale numbers.
+  if (recipeData.ingredients && ingredientsChanged(recipe.ingredients, recipeData.ingredients)) {
+    recipeData.nutrition = await getNutrition(toNutritionQuery(recipeData.ingredients));
   }
 
   recipe.set(recipeData);
