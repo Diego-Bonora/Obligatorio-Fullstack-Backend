@@ -1,6 +1,7 @@
 import Recipe from "../models/recipe.model.js";
 import User from "../models/user.model.js";
 import Category from "../models/category.model.js";
+import Like from "../models/like.model.js";
 import { getSkip, buildPaginatedResponse } from "../utils/pagination.utils.js";
 import { escapeRegex } from "../utils/regex.utils.js";
 import cloudinary from "../config/cloudinary.js";
@@ -121,10 +122,11 @@ export const listRecipesService = async (userId, query) => {
   return buildPaginatedResponse(recipes, total, page, limit);
 };
 
-export const getRecipeService = async (id) => {
+export const getRecipeService = async (id, userId) => {
   const recipe = await Recipe.findOne({ _id: id, active: true }).populate("author", "username");
   if (!recipe) throw notFoundError();
-  return recipe;
+  const likedByMe = Boolean(await Like.exists({ recipe: id, user: userId }));
+  return { ...recipe.toObject(), likedByMe };
 };
 
 export const updateRecipeService = async (id, userId, recipeData) => {

@@ -19,7 +19,7 @@ export const listRecipes = async (req, res) => {
 };
 
 export const getRecipe = async (req, res) => {
-  const recipe = await getRecipeService(req.validatedParams.id);
+  const recipe = await getRecipeService(req.validatedParams.id, req.decoded.id);
   res.json(recipe);
 };
 
