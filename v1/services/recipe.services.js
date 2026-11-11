@@ -121,7 +121,7 @@ export const listRecipesService = async (userId, query) => {
       .sort(sort)
       .skip(getSkip(page, limit))
       .limit(limit)
-      .populate("author", "username"),
+      .populate("author", "username profilePicture"),
     Recipe.countDocuments(filter),
   ]);
 
@@ -129,7 +129,7 @@ export const listRecipesService = async (userId, query) => {
 };
 
 export const getRecipeService = async (id, userId) => {
-  const recipe = await Recipe.findOne({ _id: id, active: true }).populate("author", "username");
+  const recipe = await Recipe.findOne({ _id: id, active: true }).populate("author", "username profilePicture");
   if (!recipe) throw notFoundError();
   const likedByMe = Boolean(await Like.exists({ recipe: id, user: userId }));
   return { ...recipe.toObject(), likedByMe };

@@ -22,7 +22,7 @@ export const listCommentsService = async (recipeId, { page, limit }) => {
       .sort({ createdAt: -1 })
       .skip(getSkip(page, limit))
       .limit(limit)
-      .populate("author", "username"),
+      .populate("author", "username profilePicture"),
     Comment.countDocuments(filter),
   ]);
 
