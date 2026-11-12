@@ -4,12 +4,14 @@ import recipeRouter from "./routes/recipe.routes.js";
 import userRouter from "./routes/user.routes.js";
 import adminRouter from "./routes/admin.routes.js";
 import categoryRouter from "./routes/category.routes.js";
+import showcaseRouter from "./routes/showcase.routes.js";
 import { authenticateMiddleware } from "./middlewares/authenticate.middleware.js";
 
 const router = express.Router({ mergeParams: true });
 
 // Public routes
 router.use("/auth", authRouter);
+router.use("/showcase", showcaseRouter);
 
 // Everything below requires a valid token
 router.use(authenticateMiddleware);

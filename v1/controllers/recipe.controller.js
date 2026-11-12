@@ -1,6 +1,7 @@
 import {
   createRecipeService,
   listRecipesService,
+  getShowcaseService,
   getRecipeService,
   updateRecipeService,
   updateRecipeImageService,
@@ -16,6 +17,12 @@ export const createRecipe = async (req, res) => {
 export const listRecipes = async (req, res) => {
   const result = await listRecipesService(req.decoded.id, req.validatedQuery);
   res.json(result);
+};
+
+export const getShowcase = async (req, res) => {
+  const showcase = await getShowcaseService();
+  res.set("Cache-Control", "public, s-maxage=300");
+  res.json(showcase);
 };
 
 export const getRecipe = async (req, res) => {

@@ -44,6 +44,8 @@ export const substitutionsBodySchema = Joi.object({
   }),
 });
 
+export const showcaseQuerySchema = Joi.object({});
+
 export const recipeIdParamsSchema = Joi.object({
   id: objectId.required().messages({ "string.length": "El id de la receta no es válido" }),
 });

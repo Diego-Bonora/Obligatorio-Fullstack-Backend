@@ -128,6 +128,35 @@ export const listRecipesService = async (userId, query) => {
   return buildPaginatedResponse(recipes, total, page, limit);
 };
 
+const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
+const SHOWCASE_CANDIDATES = 5;
+const SHOWCASE_RECENT = 3;
+
+const findTopRecipes = (filter) =>
+  Recipe.find({ active: true, ...filter })
+    .sort({ likesCount: -1, createdAt: -1 })
+    .limit(SHOWCASE_CANDIDATES)
+    .select("title imageUrl prepTime likesCount createdAt author")
+    .populate("author", "username profilePicture");
+
+// A recipe with a photo looks better on the login page, even if it has fewer likes.
+const pickFeatured = (recipes) => recipes.find((recipe) => recipe.imageUrl) ?? recipes[0] ?? null;
+
+export const getShowcaseService = async () => {
+  const weekAgo = new Date(Date.now() - WEEK_MS);
+  const [thisWeek, recent] = await Promise.all([
+    findTopRecipes({ createdAt: { $gte: weekAgo } }),
+    Recipe.find({ active: true })
+      .sort({ createdAt: -1 })
+      .limit(SHOWCASE_RECENT)
+      .select("title createdAt author")
+      .populate("author", "username profilePicture"),
+  ]);
+  const candidates = thisWeek.length ? thisWeek : await findTopRecipes({});
+
+  return { featured: pickFeatured(candidates), recent };
+};
+
 export const getRecipeService = async (id, userId) => {
   const recipe = await Recipe.findOne({ _id: id, active: true }).populate("author", "username profilePicture");
   if (!recipe) throw notFoundError();

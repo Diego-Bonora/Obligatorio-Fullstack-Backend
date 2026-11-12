@@ -5568,6 +5568,90 @@
             },
             "description": "Sube un archivo que está junto al JSON de la colección. Postman lo busca en Settings > General > Working directory: configurá ahí la carpeta de la colección. Si no lo encuentra, manda el request sin archivo y la API responde 400 \"Debe enviar una imagen\"."
           }
+        },
+        {
+          "name": "Showcase público, sin token (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Devuelve featured (objeto o null) y recent (array)\", () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.featured === null || typeof json.featured === \"object\").to.eql(true);",
+                  "  pm.expect(json.recent).to.be.an(\"array\");",
+                  "  pm.expect(json.recent.length).to.be.at.most(3);",
+                  "});",
+                  "pm.test(\"Los autores no exponen el email\", () => {",
+                  "  const json = pm.response.json();",
+                  "  const authors = [json.featured, ...json.recent].filter(Boolean).map((recipe) => recipe.author).filter(Boolean);",
+                  "  authors.forEach((author) => pm.expect(author).to.not.have.property(\"email\"));",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{prod_base_url}}/v1/showcase",
+              "host": [
+                "{{prod_base_url}}"
+              ],
+              "path": [
+                "v1",
+                "showcase"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Showcase - parámetro desconocido (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"Error de validación en foo\", () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.message).to.eql(\"Error de validación\");",
+                  "  pm.expect(json.details.map((detail) => detail.field)).to.include(\"foo\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{prod_base_url}}/v1/showcase?foo=1",
+              "host": [
+                "{{prod_base_url}}"
+              ],
+              "path": [
+                "v1",
+                "showcase"
+              ],
+              "query": [
+                {
+                  "key": "foo",
+                  "value": "1"
+                }
+              ]
+            }
+          }
         }
       ]
     },
