@@ -84,7 +84,7 @@ export const createRecipeService = async (userId, recipeData) => {
 };
 
 const buildFeedFilter = async (userId, query) => {
-  const { feed, category, author, difficulty, maxTime, ingredient, tags } = query;
+  const { feed, category, author, difficulty, maxTime, ingredient, q, tags } = query;
   const conditions = [{ active: true }];
 
   if (category) conditions.push({ category });
@@ -95,6 +95,10 @@ const buildFeedFilter = async (userId, query) => {
     conditions.push({
       "ingredients.name": { $regex: escapeRegex(ingredient), $options: "i" },
     });
+  }
+  if (q) {
+    const pattern = { $regex: escapeRegex(q), $options: "i" };
+    conditions.push({ $or: [{ title: pattern }, { "ingredients.name": pattern }] });
   }
   if (tags) {
     const tagList = tags

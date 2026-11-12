@@ -59,5 +59,6 @@ export const listRecipesQuerySchema = Joi.object({
   difficulty: Joi.string().valid("easy", "medium", "hard"),
   maxTime: Joi.number().integer().min(1).max(1440),
   ingredient: Joi.string().trim().min(1).max(50),
+  q: Joi.string().trim().min(1).max(50), // title or ingredient
   tags: Joi.string().trim().max(200), // comma-separated: ?tags=postre,sin-tacc
 });

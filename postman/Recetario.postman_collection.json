@@ -4815,6 +4815,165 @@
           }
         },
         {
+          "name": "Buscar por título, sin importar mayúsculas (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "pm.test(\"Encuentra el guiso de lentejas por el título\", () => {",
+                  "  pm.expect(json.meta.total).to.eql(1);",
+                  "  pm.expect(json.data[0]._id).to.eql(pm.collectionVariables.get(\"recipe2_id\"));",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{other_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{prod_base_url}}/v1/recipes?author={{author_id}}&q=GUISO",
+              "host": [
+                "{{prod_base_url}}"
+              ],
+              "path": [
+                "v1",
+                "recipes"
+              ],
+              "query": [
+                {
+                  "key": "author",
+                  "value": "{{author_id}}"
+                },
+                {
+                  "key": "q",
+                  "value": "GUISO"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Buscar por ingrediente con q (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "pm.test(\"Encuentra los panqueques por el ingrediente leche\", () => {",
+                  "  pm.expect(json.meta.total).to.eql(1);",
+                  "  pm.expect(json.data[0].title).to.eql(\"Panqueques\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{other_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{prod_base_url}}/v1/recipes?author={{author_id}}&q=leche",
+              "host": [
+                "{{prod_base_url}}"
+              ],
+              "path": [
+                "v1",
+                "recipes"
+              ],
+              "query": [
+                {
+                  "key": "author",
+                  "value": "{{author_id}}"
+                },
+                {
+                  "key": "q",
+                  "value": "leche"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Buscar - q vacío (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"Error de validación en q\", () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.message).to.eql(\"Error de validación\");",
+                  "  pm.expect(json.details.map((detail) => detail.field)).to.include(\"q\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{other_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{prod_base_url}}/v1/recipes?author={{author_id}}&q=",
+              "host": [
+                "{{prod_base_url}}"
+              ],
+              "path": [
+                "v1",
+                "recipes"
+              ],
+              "query": [
+                {
+                  "key": "author",
+                  "value": "{{author_id}}"
+                },
+                {
+                  "key": "q",
+                  "value": ""
+                }
+              ]
+            }
+          }
+        },
+        {
           "name": "Filtrar por categoría (200)",
           "event": [
             {
